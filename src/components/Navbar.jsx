@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
-import { Activity, User, FileText, LogOut } from "lucide-react"
+import { Activity, User, FileText, LogOut, TestTube } from "lucide-react"
 
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth()
@@ -33,15 +33,15 @@ const Navbar = () => {
                 </Link>
 
                 <Link
-                  to="/reports"
+                  to="/biomarkers"
                   className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive("/reports")
+                    isActive("/biomarkers")
                       ? "bg-primary text-primary-foreground"
                       : "text-muted-foreground hover:text-foreground hover:bg-accent"
                   }`}
                 >
-                  <FileText className="h-4 w-4" />
-                  <span>Reports</span>
+                  <TestTube className="h-4 w-4" />
+                  <span>Add report Data</span>
                 </Link>
 
                 <Link

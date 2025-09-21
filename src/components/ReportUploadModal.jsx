@@ -41,9 +41,10 @@ const ReportUploadModal = ({ onClose, onSuccess }) => {
   const { getRootProps, getInputProps, isDragActive, acceptedFiles } = useDropzone({
     onDrop,
     accept: {
-      "application/pdf": [".pdf"],
       "text/csv": [".csv"],
       "application/json": [".json"],
+      "application/vnd.ms-excel": [".xls"],
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
     },
     maxFiles: 1,
     disabled: uploading,
@@ -117,7 +118,7 @@ const ReportUploadModal = ({ onClose, onSuccess }) => {
                     </p>
                     <p className="text-sm text-muted-foreground">or click to browse files</p>
                   </div>
-                  <p className="text-xs text-muted-foreground">Supports PDF, CSV, and JSON files (max 10MB)</p>
+                  <p className="text-xs text-muted-foreground">Supports CSV, Excel (.xlsx, .xls), and JSON files (max 10MB)</p>
                 </div>
               )}
             </div>

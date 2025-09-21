@@ -9,7 +9,7 @@ const LandingPage = () => {
     {
       icon: Upload,
       title: "Easy Upload",
-      description: "Upload your health reports in PDF, CSV, or JSON format with just a few clicks.",
+  description: "Upload your health data in CSV, Excel, or JSON format with just a few clicks.",
     },
     {
       icon: BarChart3,

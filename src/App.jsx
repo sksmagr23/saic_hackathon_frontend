@@ -8,6 +8,7 @@ import DashboardPage from "./pages/DashboardPage"
 import ReportsPage from "./pages/ReportsPage"
 import ProfilePage from "./pages/ProfilePage"
 import LandingPage from "./pages/LandingPage"
+import BiomarkerEntryPage from "./pages/BiomarkerEntryPage"
 
 function App() {
   return (
@@ -32,6 +33,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <ReportsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/biomarkers"
+                element={
+                  <ProtectedRoute>
+                    <BiomarkerEntryPage />
                   </ProtectedRoute>
                 }
               />
