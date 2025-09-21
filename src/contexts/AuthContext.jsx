@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react"
 import axios from "axios"
 
 // Configure axios base URL
-axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:3000"
 axios.defaults.withCredentials = true
 
 const AuthContext = createContext()
@@ -15,12 +15,14 @@ export const useAuth = () => {
   return context
 }
 
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-
+  
   useEffect(() => {
+    
     checkAuthStatus()
   }, [])
 
@@ -67,3 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
+
+export const UserInfo = () => {
+      return user
+    }

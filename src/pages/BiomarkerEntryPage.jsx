@@ -3,11 +3,13 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { Plus, Trash2, Upload, FileSpreadsheet, Send, Download } from "lucide-react";
 import LoadingSpinner from "../components/LoadingSpinner";
+import { UserInfo } from "../contexts/AuthContext";
 
 const BiomarkerEntryPage = () => {
   const [loading, setLoading] = useState(false);
   const [biomarkers, setBiomarkers] = useState([{ biomarker: "", value: "" }]);
-  const [predictions, setPredictions] = useState([]);
+  const [diseaseScore, setDiseaseScore] = useState([]);
+  const [insights, setInsights] = useState({ diet: [], lifestyle: [], precaution: [] });
   const [showResults, setShowResults] = useState(false);
   const [csvFile, setCsvFile] = useState(null);
 
@@ -80,6 +82,8 @@ const BiomarkerEntryPage = () => {
       // Get user profile for age and gender
       const profileResponse = await axios.get("/api/users/profile");
       const profile = profileResponse.data;
+      console.log("User profile:", profile);
+      const user_id=profile._id;
       
       if (!profile.dateOfBirth || !profile.sex) {
         toast.error("Please complete your profile (date of birth and sex) first");
@@ -90,13 +94,14 @@ const BiomarkerEntryPage = () => {
       const age = calculateAge(profile.dateOfBirth);
       const gender = profile.sex.toLowerCase();
 
-      const response = await axios.post("/api/uploads", {
+      const response = await axios.post(`/api/uploads/${user_id}`, {
         age,
         gender,
-        labData
+        labData,
       });
 
-      setPredictions(response.data.data);
+      setDiseaseScore(response.data.data.diseaseScore);
+      setInsights(response.data.data.insights);
       setShowResults(true);
       toast.success("Analysis completed successfully!");
     } catch (error) {
@@ -127,18 +132,35 @@ const BiomarkerEntryPage = () => {
       const age = calculateAge(profile.dateOfBirth);
       const gender = profile.sex.toLowerCase();
 
-      const formData = new FormData();
-      formData.append("csvFile", fileToUpload);
-      formData.append("age", age);
-      formData.append("gender", gender);
+      // Read file content as text
+      const text = await fileToUpload.text();
 
-      const response = await axios.post("/api/uploads/csv", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      // Parse CSV text to labData object
+      const lines = text.trim().split("\n");
+      const labData = {};
+      for (let i = 1; i < lines.length; i++) { // skip header
+        const [biomarker, value] = lines[i].split(",");
+        if (biomarker && value && biomarker.trim() !== "" && !isNaN(parseFloat(value))) {
+          labData[biomarker.trim()] = parseFloat(value);
+        }
+      }
+
+      if (Object.keys(labData).length === 0) {
+        toast.error("CSV file contains no valid biomarker data");
+        setLoading(false);
+        return;
+      }
+
+      const user_id = profile._id;
+
+      const response = await axios.post(`/api/uploads/${user_id}`, {
+        age,
+        gender,
+        labData,
       });
 
-      setPredictions(response.data.data);
+      setDiseaseScore(response.data.data.diseaseScore);
+      setInsights(response.data.data.insights);
       setShowResults(true);
       toast.success("CSV analysis completed successfully!");
     } catch (error) {
@@ -289,36 +311,72 @@ const BiomarkerEntryPage = () => {
       </div>
 
       {/* Results */}
-      {showResults && predictions.length > 0 && (
-        <div className="card p-6">
-          <h2 className="text-xl font-semibold text-foreground mb-6">Analysis Results</h2>
-          <div className="space-y-4">
-            {predictions
-              .sort((a, b) => b.scoring - a.scoring)
-              .map((prediction, index) => (
-                <div
-                  key={index}
-                  className={`p-4 border rounded-lg ${getSeverityColor(prediction.scoring)}`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-lg">{prediction.label}</h3>
-                    <div className="text-right">
-                      <div className="text-sm opacity-75">
-                        Match: {(prediction.criteriaMatchPercentage * 100).toFixed(1)}%
-                      </div>
-                      <div className="font-bold">Score: {prediction.scoring.toFixed(1)}</div>
+      {showResults && (
+        <>
+          {diseaseScore.length === 0 && 
+           insights.diet.length === 0 && 
+           insights.lifestyle.length === 0 && 
+           insights.precaution.length === 0 ? (
+            <div className="text-center text-green-700 text-xl font-semibold mt-8">
+              You are fine!
+            </div>
+          ) : (
+            <>
+              {diseaseScore.length > 0 && (
+                <div className="card p-6 bg-red-50 border border-red-200">
+                  <h2 className="text-xl font-semibold text-red-700 mb-6">Diseases Predicted</h2>
+                  <div className="space-y-6">
+                    {diseaseScore
+                      .sort((a, b) => b.scoring - a.scoring)
+                      .map((disease, index) => (
+                        <div key={index} className="p-4 border rounded-lg border-red-300 bg-red-100">
+                          <h3 className="font-bold text-lg text-red-800 mb-2">{disease.label}</h3>
+                          <div className="text-sm opacity-75 mb-2">
+                            Match: {(disease.criteriaMatchPercentage * 100).toFixed(1)}% 
+                          </div>
+                          <p className="text-sm font-medium">Diet Category: {disease.dietKey}</p>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
+              {(insights.diet.length > 0 || insights.lifestyle.length > 0 || insights.precaution.length > 0) && (
+                <div className="card p-6 bg-green-50 border border-green-200">
+                  <h2 className="text-2xl font-bold text-green-800 mb-6">Insights</h2>
+                  <div className="grid md:grid-cols-3 gap-4">
+                    {/* Diet */}
+                    <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-xl shadow hover:shadow-lg transition-shadow">
+                      <h4 className="font-semibold text-green-900 mb-3">Diet Recommendations</h4>
+                      <ul className="list-disc list-inside text-green-800 text-sm space-y-1 max-h-60 overflow-y-auto">
+                        {insights.diet.map((item, i) => <li key={i}>{item}</li>)}
+                      </ul>
+                    </div>
+
+                    {/* Lifestyle */}
+                    <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-xl shadow hover:shadow-lg transition-shadow">
+                      <h4 className="font-semibold text-green-900 mb-3">Lifestyle Recommendations</h4>
+                      <ul className="list-disc list-inside text-green-800 text-sm space-y-1 max-h-60 overflow-y-auto">
+                        {insights.lifestyle.map((item, i) => <li key={i}>{item}</li>)}
+                      </ul>
+                    </div>
+
+                    {/* Precautions */}
+                    <div className="bg-gradient-to-br from-green-100 to-green-200 p-4 rounded-xl shadow hover:shadow-lg transition-shadow">
+                      <h4 className="font-semibold text-green-900 mb-3">Precautions</h4>
+                      <ul className="list-disc list-inside text-green-800 text-sm space-y-1 max-h-60 overflow-y-auto">
+                        {insights.precaution.map((item, i) => <li key={i}>{item}</li>)}
+                      </ul>
                     </div>
                   </div>
-                  <p className="text-sm opacity-75">
-                    Diet Category: {prediction.dietKey}
-                  </p>
                 </div>
-              ))}
-          </div>
-        </div>
+              )}
+            </>
+          )}
+        </>
       )}
     </div>
   );
 };
 
-export default BiomarkerEntryPage; 
+export default BiomarkerEntryPage;
