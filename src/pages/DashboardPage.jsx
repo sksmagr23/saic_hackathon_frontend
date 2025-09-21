@@ -31,16 +31,14 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     try {
       const [reportsResponse, profileResponse] = await Promise.all([
-        axios.get("/api/reports", { withCredentials: true }),
-        axios.get("/api/users/profile", { withCredentials: true }),
+        axios.get("/api/reports"),
+        axios.get("/api/users/profile"),
       ])
 
       setReports(reportsResponse.data)
       if (reportsResponse.data.length > 0) {
         const latest = reportsResponse.data[0]
-        const detailResponse = await axios.get(`/api/reports/${latest._id}`, {
-          withCredentials: true,
-        })
+        const detailResponse = await axios.get(`/api/reports/${latest._id}`)
         setLatestReport(detailResponse.data)
       }
     } catch (error) {
@@ -54,7 +52,6 @@ const DashboardPage = () => {
   const fetchTrendData = async (biomarker) => {
     try {
       const response = await axios.get(`/api/reports/trends/${biomarker}`, {
-        withCredentials: true,
         params: { months: 12 },
       })
       setTrendData(response.data)

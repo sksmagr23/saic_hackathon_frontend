@@ -22,7 +22,6 @@ const ReportUploadModal = ({ onClose, onSuccess }) => {
         formData.append("reportDate", reportDate)
 
         await axios.post("/api/reports/upload", formData, {
-          withCredentials: true,
           headers: {
             "Content-Type": "multipart/form-data",
           },

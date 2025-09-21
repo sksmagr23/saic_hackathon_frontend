@@ -1,6 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import axios from "axios"
 
+// Configure axios base URL
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || "http://localhost:5000"
+axios.defaults.withCredentials = true
+
 const AuthContext = createContext()
 
 export const useAuth = () => {
@@ -22,9 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await axios.get("/auth/status", {
-        withCredentials: true,
-      })
+      const response = await axios.get("/auth/status")
 
       if (response.data.isAuthenticated) {
         setUser(response.data.user)
@@ -40,18 +42,12 @@ export const AuthProvider = ({ children }) => {
   }
 
   const login = () => {
-    window.location.href = "/auth/google"
+    window.location.href = `${axios.defaults.baseURL}/auth/google`
   }
 
   const logout = async () => {
     try {
-      await axios.post(
-        "/auth/logout",
-        {},
-        {
-          withCredentials: true,
-        },
-      )
+      await axios.post("/auth/logout")
       setUser(null)
       setIsAuthenticated(false)
       window.location.href = "/"
