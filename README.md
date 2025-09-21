@@ -6,3 +6,7 @@
 
 ### DEMO
 - [Watch Demo Video](https://drive.google.com/file/d/1ZQuCfehH3WgLQX8Cb_e8cJbQ8uHY82xX/view?usp=sharing)
+
+### DEPLOYMENT
+
+- [Visit Website](https://saic-hackathon-frontend.vercel.app/)
